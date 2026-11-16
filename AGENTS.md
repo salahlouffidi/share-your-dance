@@ -1,52 +1,28 @@
-You are writing a Devvit web application that will be executed on Reddit.com.
+# Dance Lab / reddit-game
 
-## Tech Stack
+This is a fresh implementation inspired by salahlouffidi/share-your-dance.
+Read README.md and package.json before changing the project.
 
-- **Frontend**: Phaser, Vite
-- **Backend**: Node.js v22 serverless environment (Devvit), Hono, TRPC
-- **Communication**: tRPC v11 for end-to-end type safety
+## Decisions
 
-## Layout & Architecture
+- Keep built-in characters and shirt designs only. No user images, head replacement, background removal, or Reddit-avatar import.
+- The dance mechanic is drag a body part -> append a numbered move -> play in order.
+- Preserve the lightweight, tactile lilac/peach studio aesthetic and responsive touch support.
+- Do not reintroduce Phaser solely to match the old implementation. This renderer uses Canvas 2D to keep the client small and the local preview independent.
+- GitHub name reddit-game; Devvit name share-your-dance is provisional from onboarding and requires CLI ownership verification.
 
-- `/src/server`: **Backend Code**. This runs in a secure, serverless environment.
-  - `trpc.ts`: Defines the API router and procedures.
-  - `index.ts`: Main server entry point (Hono app).
-  - Access `redis`, `reddit`, and `context` here via `@devvit/web/server`.
-- `/src/client`: **Frontend Code**. This is executed inside of an iFrame on reddit.com
-  - To add an entrypoint, create a HTML file and add to the mapping inside of `devvit.json`
-  - Entrypoints:
-    - `game.html`: The main React entry point (Expanded View).
-    - `splash.html`: The initial React entry point (Inline View). This will be shown in the reddit.com feed. Please keep it fast and keep heavy dependencies inside of `game.html`
-- `/src/shared`: **Shared Code**. Code to share between the client and server
+## Runtime
 
-## Frontend
+- npm ci, npm run dev: browser preview without Reddit authentication.
+- npm run dev:reddit: Devvit playtest; requires login and a moderated test subreddit.
+- npm run login:reddit: browser login flow. Never request credentials in chat.
+- npm run build and npm run build:reddit: separate build targets.
+- Client TS config has the browser export condition. Server TS config must NOT have it, otherwise Devvit selects its intentional panic imports.
+- Keep server imports out of browser modules. Gate client SDK use behind the **REDDIT** compile-time flag.
 
-### Rules
+## Verification
 
-- Instead of `window.location` or `window.assign`, use `navigateTo` from `@devvit/web/client`
-
-### Limitations
-
-- `window.alert`: Use `showToast` or `showForm` from `@devvit/web/client`
-- File downloads: Use clipboard API with `showToast` to confirm
-- Geolocation, camera, microphone, and notifications web APIs: No alternatives
-- Inline script tags inside of `html` files: Use a script tag and separate js/ts file
-
-## Commands
-
-- `npm run type-check`: Check typescript types
-- `npm run lint`: Check the linter
-- `npm run test -- my-file-name`: Run tests isolated to a file
-
-## Code Style
-
-- Prefer type aliases over interfaces when writing typescript
-- Prefer named exports over default exports
-- Never cast typescript types
-
-## Global Rules
-
-- You may find code that references blocks or `@devvit/public-api` while building a feature. Do NOT use this code as this project is configured to use Devvit web only.
-- Whenever you add an endpoint for a new menu item action, ensure that you've added the corresponding mapping to `devvit.json` so that it is properly registered
-
-Docs: https://developers.reddit.com/docs/llms.txt.
+Run npm run check, npm run lint, npm test, npm run build, npm run build:reddit.
+For interaction changes: npx playwright install chromium, npm run test:ui.
+Do not claim a live Reddit integration was tested without actually completing login, install and playtest.
+Do not publish the Devvit app publicly or merge/push unrelated work unless requested.

@@ -3,16 +3,16 @@
 // client can draw it and the server can validate and store it.
 
 export const PARTS = [
-  'torso',
-  'head',
-  'armL',
-  'foreL',
-  'armR',
-  'foreR',
-  'legL',
-  'shinL',
-  'legR',
-  'shinR',
+  "torso",
+  "head",
+  "armL",
+  "foreL",
+  "armR",
+  "foreR",
+  "legL",
+  "shinL",
+  "legR",
+  "shinR",
 ] as const;
 
 export type Part = (typeof PARTS)[number];
@@ -37,7 +37,7 @@ type BoneDef = {
   /** Parent bone, or null for bones attached to the hips. */
   parent: Part | null;
   /** Where the bone starts: 'end' of its parent, or an offset from the hips. */
-  anchor: 'end' | Point;
+  anchor: "end" | Point;
   /** Rest direction relative to the parent direction (or to the world). */
   rest: number;
   length: number;
@@ -56,47 +56,47 @@ const BONES: Record<Part, BoneDef> = {
     rest: -90 * DEG,
     length: 0.8,
     limit: 35 * DEG,
-    label: 'Body',
+    label: "Body",
   },
   head: {
-    parent: 'torso',
-    anchor: 'end',
+    parent: "torso",
+    anchor: "end",
     rest: 0,
     length: 0.36,
     limit: 45 * DEG,
-    label: 'Head',
+    label: "Head",
   },
   armL: {
-    parent: 'torso',
-    anchor: 'end',
+    parent: "torso",
+    anchor: "end",
     rest: 200 * DEG,
     length: 0.42,
     limit: 175 * DEG,
-    label: 'Left arm',
+    label: "Left arm",
   },
   foreL: {
-    parent: 'armL',
-    anchor: 'end',
+    parent: "armL",
+    anchor: "end",
     rest: 0,
     length: 0.4,
     limit: 150 * DEG,
-    label: 'Left hand',
+    label: "Left hand",
   },
   armR: {
-    parent: 'torso',
-    anchor: 'end',
+    parent: "torso",
+    anchor: "end",
     rest: 160 * DEG,
     length: 0.42,
     limit: 175 * DEG,
-    label: 'Right arm',
+    label: "Right arm",
   },
   foreR: {
-    parent: 'armR',
-    anchor: 'end',
+    parent: "armR",
+    anchor: "end",
     rest: 0,
     length: 0.4,
     limit: 150 * DEG,
-    label: 'Right hand',
+    label: "Right hand",
   },
   legL: {
     parent: null,
@@ -104,15 +104,15 @@ const BONES: Record<Part, BoneDef> = {
     rest: 97 * DEG,
     length: 0.5,
     limit: 85 * DEG,
-    label: 'Left leg',
+    label: "Left leg",
   },
   shinL: {
-    parent: 'legL',
-    anchor: 'end',
+    parent: "legL",
+    anchor: "end",
     rest: 0,
     length: 0.5,
     limit: 130 * DEG,
-    label: 'Left foot',
+    label: "Left foot",
   },
   legR: {
     parent: null,
@@ -120,15 +120,15 @@ const BONES: Record<Part, BoneDef> = {
     rest: 83 * DEG,
     length: 0.5,
     limit: 85 * DEG,
-    label: 'Right leg',
+    label: "Right leg",
   },
   shinR: {
-    parent: 'legR',
-    anchor: 'end',
+    parent: "legR",
+    anchor: "end",
     rest: 0,
     length: 0.5,
     limit: 130 * DEG,
-    label: 'Right foot',
+    label: "Right foot",
   },
 };
 
@@ -174,11 +174,11 @@ const solveBone = (pose: Pose, part: Part, parent: Bone | null): Bone => {
   const dir = parentDir + def.rest + pose[part];
 
   let start: Point;
-  if (def.anchor === 'end') {
+  if (def.anchor === "end") {
     start = parent ? { ...parent.end } : { x: 0, y: 0 };
-    if (part === 'armL' || part === 'armR') {
+    if (part === "armL" || part === "armR") {
       // Slide the arm sideways along the shoulder line.
-      const side = part === 'armL' ? -1 : 1;
+      const side = part === "armL" ? -1 : 1;
       const across = parentDir + Math.PI / 2;
       start = {
         x: start.x + Math.cos(across) * SHOULDER_HALF_WIDTH * side,
@@ -202,23 +202,23 @@ const solveBone = (pose: Pose, part: Part, parent: Bone | null): Bone => {
 
 /** Forward kinematics: where every bone is, in body units, hips at 0,0. */
 export const solveBones = (pose: Pose): Record<Part, Bone> => {
-  const torso = solveBone(pose, 'torso', null);
-  const armL = solveBone(pose, 'armL', torso);
-  const armR = solveBone(pose, 'armR', torso);
-  const legL = solveBone(pose, 'legL', null);
-  const legR = solveBone(pose, 'legR', null);
+  const torso = solveBone(pose, "torso", null);
+  const armL = solveBone(pose, "armL", torso);
+  const armR = solveBone(pose, "armR", torso);
+  const legL = solveBone(pose, "legL", null);
+  const legR = solveBone(pose, "legR", null);
 
   return {
     torso,
-    head: solveBone(pose, 'head', torso),
+    head: solveBone(pose, "head", torso),
     armL,
-    foreL: solveBone(pose, 'foreL', armL),
+    foreL: solveBone(pose, "foreL", armL),
     armR,
-    foreR: solveBone(pose, 'foreR', armR),
+    foreR: solveBone(pose, "foreR", armR),
     legL,
-    shinL: solveBone(pose, 'shinL', legL),
+    shinL: solveBone(pose, "shinL", legL),
     legR,
-    shinR: solveBone(pose, 'shinR', legR),
+    shinR: solveBone(pose, "shinR", legR),
   };
 };
 
@@ -236,7 +236,7 @@ export const aimPart = (pose: Pose, part: Part, target: Point): number => {
 /** The pose reached after the first `count` steps (all of them by default). */
 export const poseAfter = (
   steps: readonly Step[],
-  count = steps.length
+  count = steps.length,
 ): Pose => {
   const pose = restPose();
   for (const step of steps.slice(0, count)) {
@@ -290,7 +290,7 @@ export const frameAt = (steps: readonly Step[], timeMs: number): DanceFrame => {
 };
 
 const isPart = (value: unknown): value is Part =>
-  typeof value === 'string' && PARTS.some((part) => part === value);
+  typeof value === "string" && PARTS.some((part) => part === value);
 
 /** Validates untrusted data (a saved or shared dance) into clean steps. */
 export const parseSteps = (data: unknown): Step[] | null => {
@@ -298,10 +298,10 @@ export const parseSteps = (data: unknown): Step[] | null => {
 
   const steps: Step[] = [];
   for (const item of data) {
-    if (typeof item !== 'object' || item === null) return null;
-    if (!('part' in item) || !('angle' in item)) return null;
+    if (typeof item !== "object" || item === null) return null;
+    if (!("part" in item) || !("angle" in item)) return null;
     const { part, angle } = item;
-    if (!isPart(part) || typeof angle !== 'number' || !Number.isFinite(angle)) {
+    if (!isPart(part) || typeof angle !== "number" || !Number.isFinite(angle)) {
       return null;
     }
     steps.push({ part, angle: clampToLimit(part, angle) });

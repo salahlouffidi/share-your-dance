@@ -1,47 +1,22 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <link rel="stylesheet" type="text/css" href="splash.css" />
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width, height=device-height, user-scalable=0"
-    />
-    <title>Share your dance</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Share Your Dance</title>
+    <link rel="stylesheet" href="./splash.css" />
   </head>
   <body>
-    <main class="splash">
-      <svg
-        class="dancer"
-        viewBox="0 0 120 150"
-        role="img"
-        aria-label="A clay dancer mid-move"
-      >
-        <ellipse cx="60" cy="140" rx="42" ry="7" fill="#e2cfae" />
-        <g fill="none" stroke-linecap="round">
-          <path d="M52 92 L44 114 L40 136" stroke="#d8734a" stroke-width="11" />
-          <path d="M68 92 L80 110 L96 122" stroke="#d8734a" stroke-width="11" />
-          <path d="M52 92 L68 92" stroke="#4a3327" stroke-width="16" />
-          <path d="M60 86 L60 56" stroke="#2e8b84" stroke-width="27" />
-          <path d="M46 54 L28 40 L22 18" stroke="#d8734a" stroke-width="9" />
-          <path d="M74 54 L92 62 L104 46" stroke="#d8734a" stroke-width="9" />
-        </g>
-        <circle cx="60" cy="66" r="8" fill="#fbf3e4" />
-        <circle cx="63" cy="26" r="15" fill="#d8734a" />
-        <circle cx="58" cy="25" r="1.8" fill="#2b1d16" />
-        <circle cx="68" cy="26" r="1.8" fill="#2b1d16" />
-        <path
-          d="M58 31 Q63 36 68 32"
-          fill="none"
-          stroke="#2b1d16"
-          stroke-width="1.8"
-          stroke-linecap="round"
-        />
-      </svg>
-      <h1>Share your dance</h1>
-      <p id="tagline">Bend the clay, number the moves, press Play.</p>
-      <button id="start-button" type="button">Make your dance</button>
+    <main>
+      <span class="eyebrow">✳ DANCE LAB · BY LOUFFI</span>
+      <h1>Small moves.<br /><em>Big personality.</em></h1>
+      <p>
+        Pick a clay friend. Sculpt a dance.<br />Share a little joy with the
+        world.
+      </p>
+      <button id="open">Let’s make moves ↗</button
+      ><small>A fresh creative challenge every day.</small>
     </main>
-    <script type="module" src="splash.ts" defer></script>
+    <script type="module" src="./splash.ts"></script>
   </body>
 </html>

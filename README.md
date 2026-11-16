@@ -1,62 +1,88 @@
-# Share your dance
+# reddit-game · Dance Lab
 
-A daily clay-dancer game for Reddit, built on Devvit Web with Phaser for
-Reddit's Game of the Day Hackathon.
+A fresh implementation of **Share Your Dance**: a lightweight clay choreography studio for Reddit's daily-games hackathon. Drag a body part, record numbered moves, and play your dance. Built-in characters only — no personal-image upload or Reddit-avatar import.
 
-You bend a clay dancer one body part at a time. Every move becomes a numbered
-step. Press Play and the dancer performs the steps in order. Each dance is
-meant to be shared as a post, and others answer with their own.
+![Dance Lab studio](docs/studio-desktop.png)
 
-## How to play
+## Start locally (no Reddit account needed)
 
-1. Touch a body part and drag it to a new position.
-2. Each move is added as the next numbered step (up to 8).
-3. Press **Play** to watch the dance. **Undo** removes the last step and
-   **Clear** starts over.
+Use **Node 24 LTS** (Node >=22.12 is supported). From PowerShell, Terminal, or Codex:
 
-## Status
-
-Week 1 (done): the dance editor.
-
-- Clay dancer drawn in code, no image assets
-- Touch-to-number step editor with per-part turning limits
-- Playback with a springy snap and a body bounce on each step
-
-Next:
-
-- Week 2: save and share a dance as a post (Redis), T-shirt print from the
-  player's Reddit avatar, and the daily challenge
-- Week 3: streaks, Devvit Journeys events, polish, and the demo post
-
-## Run it
-
-Requires Node 24 (see `.nvmrc`).
-
-```bash
-npm install
-npm run login   # sign in to Reddit, once
-npm run dev     # playtest in your test subreddit
+```sh
+npm ci
+npm run dev
 ```
 
-Other commands:
+Open **http://127.0.0.1:5173**. Keep the terminal running; Ctrl+C stops it. `npm run dev` deliberately starts a regular browser preview, not a Reddit authentication flow.
 
-```bash
-npm run test:unit    # dance model tests
-npm run test:types   # type check
+The project uses TypeScript, Vite and the browser's Canvas 2D API. All characters are drawn in code with gradients, articulated joints and numbered markers; there are no external fonts, image downloads or heavy game-engine assets.
+
+## What works
+
+- Four clay characters: Mochi, Peach, Pip and Bowie.
+- Drag-to-pose editing of ten body parts; numbered sequences of up to eight moves.
+- Keyboard-accessible body-part selector and angle slider, plus a record button.
+- Undo, redo, clear, selectable timeline steps, example groove.
+- Springy playback, tempo, loop and optional locally synthesized beat.
+- A deterministic daily creative challenge, shared by UTC date, with live progress.
+- Local save/load and validated dance-code copy/import.
+- Responsive layouts, reduced idle motion, and accessible labels.
+- Separate Devvit build with authenticated Redis drafts and a user-initiated dance-post sharing endpoint.
+
+A selected timeline step previews that pose; new moves append to the sequence. It does not edit or reorder an existing step. Use Undo/Redo or start a new recipe to revise a sequence.
+
+## Reddit / Devvit
+
+The **GitHub repository name** is `reddit-game`. The **Devvit app name** in `devvit.json` remains `share-your-dance`, matching the name chosen in the previous browser onboarding. These names do not have to match. Onboarding alone does not prove that an app name has been registered or is available: the Devvit CLI will confirm ownership/availability. If you deliberately register another unique Devvit name, update `devvit.json` accordingly.
+
+```sh
+npm run login:reddit
+npm run build:reddit
+npm run dev:reddit
+```
+
+Complete Reddit sign-in in your browser. Use a test subreddit where you are a moderator. Follow the CLI's instructions to select/install the app in that subreddit. The subreddit menu item **Open Dance Studio** creates the interactive entry post. The inline card expands to the full studio.
+
+Unlike the local preview, Reddit mode saves drafts through Redis scoped to the app installation. **Share your dance** creates a Reddit post as the signed-in player and opens that post. Its dance is embedded in the post data, so others can play or remix it. Sharing is throttled to one request per user per minute; a failed request may still have created a post, so inspect the subreddit before retrying.
+
+**Status:** local interaction tests and both builds can be verified without credentials. Live Reddit login, installation, post creation, Redis round-trip, and actual app review still require a signed-in Devvit playtest. They must not be claimed as verified just because the build passes. No public Devvit publishing happens automatically.
+
+## Checks
+
+```sh
+npm run check
 npm run lint
+npm test
 npm run build
+npm run build:reddit
 ```
 
-## Layout
+Optional browser smoke test:
 
-- `src/shared/dance.ts`: the dance model (skeleton, poses, steps, playback
-  timing, validation). Pure code, shared by client and server.
-- `src/client/dancer.ts`: draws the clay dancer and finds the part under a
-  touch.
-- `src/client/scenes/Editor.ts`: the Phaser scene for editing and playback.
-- `src/client/game.ts`, `game.html`, `game.css`: the page around the canvas
-  (step chips and buttons).
-- `src/client/splash.*`: the small card shown in the Reddit feed.
-- `src/server`: the Devvit server (post creation; saving comes in week 2).
+```sh
+npx playwright install chromium
+npm run test:ui
+```
 
-Based on Reddit's Devvit Phaser template (BSD-3-Clause, see `LICENSE`).
+The smoke test starts/stops its own Vite server on port 5174, checks the desktop/mobile layout and main interactions, and writes screenshots to the parent directory. CI runs unit checks and both builds; browser checks can be run separately.
+
+## Privacy and limits
+
+- No cameras, microphones, uploaded photos, avatar fetching, AI APIs or analytics.
+- Local preview saves a single draft on the device; it is not synchronized to Reddit.
+- Dance codes contain only a built-in character ID, tempo, and body-part angles.
+- Reddit drafts are associated with the authenticated user ID. Shared dances become visible in the selected subreddit.
+- This release does not include a community gallery, streaks, voting rewards, scheduled daily posts, or video/GIF exports. The daily challenge updates on page load by UTC date.
+- Unsaved edits can be lost when the page closes; use Save or copy a dance code.
+
+## Troubleshooting
+
+- **Missing dependencies:** run `npm ci` inside this directory, not its parent.
+- **Unsupported Node version:** install Node 24 LTS, reopen the terminal, then reinstall dependencies.
+- **Port 5173 in use:** stop the other server, or run `npm run dev -- --port 5175`.
+- **Devvit authorization or app-name error:** complete `npm run login:reddit`; confirm the correct Reddit account and app ownership. Never paste tokens/passwords into chat or commit `.env` files.
+- **Reddit fails but local works:** collect the actual CLI error. The local preview has no dependency on Reddit permissions.
+
+## Source and license
+
+The choreography model in `src/shared/dance.ts` is adapted from [salahlouffidi/share-your-dance](https://github.com/salahlouffidi/share-your-dance). The interface, Canvas renderer, local runtime, storage flows and integration in this project are new. The original project's BSD-3-Clause license and attribution are retained in `LICENSE`.
