@@ -1,0 +1,176 @@
+:root {
+  --paper: #f4ead9;
+  --paper-deep: #e9dcc3;
+  --ink: #2b1d16;
+  --clay: #d8734a;
+  --clay-deep: #a94e29;
+  --teal: #2e8b84;
+  --sun: #f2b632;
+  --font: ui-rounded, 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  overscroll-behavior: none;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 4px;
+}
+
+.bar h1 {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+}
+
+.count {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+#game-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+}
+
+/* Out of the flow, so the canvas size never feeds back into the layout. */
+#game-container canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.panel {
+  padding: 8px 16px 14px;
+  background: var(--paper-deep);
+  border-top: 3px solid var(--ink);
+}
+
+.hint {
+  margin: 0 auto 8px;
+  max-width: 520px;
+  min-height: 2.7em;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.steps {
+  display: flex;
+  gap: 6px;
+  min-height: 34px;
+  max-width: 520px;
+  margin: 0 auto 10px;
+  padding: 0 0 2px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.steps li {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.steps li b {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.75rem;
+}
+
+.steps li.active {
+  background: var(--sun);
+  transform: translateY(-2px);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: 0 4px 0 var(--ink);
+  color: var(--ink);
+  font: 700 1rem var(--font);
+  cursor: pointer;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease;
+}
+
+button.primary {
+  background: var(--clay);
+  color: #fff8ee;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+button:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .steps li {
+    transition: none;
+  }
+}
