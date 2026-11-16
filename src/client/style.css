@@ -719,6 +719,10 @@ dialog .play-button {
 }
 .daily-streak {
   font-weight: 700;
+  white-space: pre-line;
+}
+.daily-streak:empty {
+  display: none;
 }
 .daily-date {
   color: #6c7350;

@@ -245,18 +245,15 @@ function sync() {
   el("daily-open").classList.toggle("done", completedToday);
   el("daily-date").textContent =
     `${challenge.date} · new recipe at midnight UTC`;
-  const parts = [
-    completedToday
-      ? "Done for today ✓"
-      : "Save or share a dance that ticks all three.",
-  ];
+  const parts: string[] = [];
+  if (completedToday) parts.push("Done for today ✓");
   if (streak > 0)
     parts.push(`Streak: ${streak} day${streak === 1 ? "" : "s"} 🔥`);
   if (dancersToday !== null)
     parts.push(
-      `${dancersToday} dancer${dancersToday === 1 ? "" : "s"} finished today.`,
+      `${dancersToday} dancer${dancersToday === 1 ? "" : "s"} finished today`,
     );
-  el("daily-streak").textContent = parts.join(" · ");
+  el("daily-streak").textContent = parts.join("\n");
 }
 for (const key of CHARACTERS) {
   const look = LOOKS[key],
