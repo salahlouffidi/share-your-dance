@@ -1,4 +1,4 @@
-# reddit-game · Dance Lab
+# Share Your Dance · Dance Lab
 
 A fresh implementation of **Share Your Dance**: a lightweight clay choreography studio for Reddit's daily-games hackathon. Drag a body part, record numbered moves, and play your dance. Built-in characters only — no personal-image upload or Reddit-avatar import.
 
@@ -19,21 +19,24 @@ The project uses TypeScript, Vite and the browser's Canvas 2D API. All character
 
 ## What works
 
+- One-screen layout: the stage, the numbered moves and Play are always visible, with no page scrolling, from small phones to desktop and inside a Reddit post.
 - Four clay characters: Mochi, Peach, Pip and Bowie.
 - Drag-to-pose editing of ten body parts; numbered sequences of up to eight moves.
 - Keyboard-accessible body-part selector and angle slider, plus a record button.
 - Undo, redo, clear, selectable timeline steps, example groove.
 - Springy playback, tempo, loop and optional locally synthesized beat.
-- A deterministic daily creative challenge, shared by UTC date, with live progress.
+- A daily creative challenge shared by UTC date. Title, required body part and move count (4 to 8) change daily; the same recipe only repeats after 35 days.
+- Daily streaks: save or share a dance that completes the challenge. Reddit mode also counts how many dancers finished today, and a scheduled task posts each day's challenge to the subreddit.
+- Tap a numbered move to edit it in place.
 - Local save/load and validated dance-code copy/import.
 - Responsive layouts, reduced idle motion, and accessible labels.
 - Separate Devvit build with authenticated Redis drafts and a user-initiated dance-post sharing endpoint.
 
-A selected timeline step previews that pose; new moves append to the sequence. It does not edit or reorder an existing step. Use Undo/Redo or start a new recipe to revise a sequence.
+Tap a numbered move to edit it: the stage shows that pose, and your next drag (or **Update move**) replaces that step instead of adding a new one. Tap it again to go back to adding moves.
 
 ## Reddit / Devvit
 
-The **GitHub repository name** is `reddit-game`. The **Devvit app name** in `devvit.json` remains `share-your-dance`, matching the name chosen in the previous browser onboarding. These names do not have to match. Onboarding alone does not prove that an app name has been registered or is available: the Devvit CLI will confirm ownership/availability. If you deliberately register another unique Devvit name, update `devvit.json` accordingly.
+The GitHub repository and the Devvit app are both named `share-your-dance`.
 
 ```sh
 npm run login:reddit
@@ -72,7 +75,7 @@ The smoke test starts/stops its own Vite server on port 5174, checks the desktop
 - Local preview saves a single draft on the device; it is not synchronized to Reddit.
 - Dance codes contain only a built-in character ID, tempo, and body-part angles.
 - Reddit drafts are associated with the authenticated user ID. Shared dances become visible in the selected subreddit.
-- This release does not include a community gallery, streaks, voting rewards, scheduled daily posts, or video/GIF exports. The daily challenge updates on page load by UTC date.
+- This release does not include a community gallery, voting rewards, or video/GIF exports. The daily challenge updates on page load by UTC date.
 - Unsaved edits can be lost when the page closes; use Save or copy a dance code.
 
 ## Troubleshooting

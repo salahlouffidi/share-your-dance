@@ -13,6 +13,10 @@ import {
   encodeDance,
   challengeFor,
   challengeComplete,
+  liveStreak,
+  nextStreak,
+  parseStreak,
+  type Dance,
 } from "../shared/studio";
 import type { UiResponse } from "@devvit/web/shared";
 
@@ -26,6 +30,52 @@ app.onError((error, c) => {
     },
     500,
   );
+});
+const DAY_SECONDS = 86400;
+
+/** Streak, today's completion and today's finisher count for one user. */
+async function progressFor(userId: string) {
+  const today = challengeFor().date;
+  const [rawStreak, done, count] = await Promise.all([
+    redis.get(`streak:${userId}`),
+    redis.get(`done:${today}:${userId}`),
+    redis.get(`done-count:${today}`),
+  ]);
+  const stored = parseStreak(rawStreak);
+  return {
+    streak: liveStreak(stored, today),
+    completedToday: done === "1",
+    dancersToday: Number(count ?? 0) || 0,
+  };
+}
+
+/**
+ * Marks today's challenge done for this user if `dance` completes it. The
+ * finisher count only grows once per user per day.
+ */
+async function recordProgress(userId: string, dance: Dance) {
+  const challenge = challengeFor();
+  if (challengeComplete(dance, challenge)) {
+    const first = await redis.set(`done:${challenge.date}:${userId}`, "1", {
+      nx: true,
+      expiration: new Date(Date.now() + 3 * DAY_SECONDS * 1000),
+    });
+    if (first) {
+      const next = nextStreak(
+        parseStreak(await redis.get(`streak:${userId}`)),
+        challenge.date,
+      );
+      await redis.set(`streak:${userId}`, JSON.stringify(next));
+      await redis.incrBy(`done-count:${challenge.date}`, 1);
+      await redis.expire(`done-count:${challenge.date}`, 3 * DAY_SECONDS);
+    }
+  }
+  return progressFor(userId);
+}
+
+app.get("/api/progress", async (c) => {
+  if (!context.userId) return c.json({ message: "Not signed in." }, 401);
+  return c.json(await progressFor(context.userId));
 });
 app.get("/api/state", async (c) => {
   const post = context.postData;
@@ -55,7 +105,7 @@ app.post("/api/draft", async (c) => {
   await redis.set(`draft:${context.userId}`, encodeDance(dance));
   return c.json({
     saved: true,
-    dailyComplete: challengeComplete(dance, challengeFor()),
+    ...(await recordProgress(context.userId, dance)),
   });
 });
 app.post("/api/share", async (c) => {
@@ -93,6 +143,7 @@ app.post("/api/share", async (c) => {
   });
   return c.json({
     url: `https://www.reddit.com/r/${context.subredditName}/comments/${post.id.replace(/^t3_/, "")}/`,
+    ...(await recordProgress(context.userId, dance)),
   });
 });
 app.post("/internal/create-post", async (c) => {
@@ -102,5 +153,22 @@ app.post("/internal/create-post", async (c) => {
   return c.json<UiResponse>({
     navigateTo: `https://www.reddit.com/r/${context.subredditName}/comments/${post.id.replace(/^t3_/, "")}/`,
   });
+});
+/**
+ * Runs daily (see devvit.json scheduler). Posts today's challenge once, so the
+ * subreddit gets a fresh entry point every day without a moderator.
+ */
+app.post("/internal/scheduler/daily-post", async (c) => {
+  const challenge = challengeFor();
+  const first = await redis.set(`daily-post:${challenge.date}`, "1", {
+    nx: true,
+    expiration: new Date(Date.now() + 3 * DAY_SECONDS * 1000),
+  });
+  if (first) {
+    await reddit.submitCustomPost({
+      title: `Daily dance · ${challenge.date} · ${challenge.title} (${challenge.steps} moves)`,
+    });
+  }
+  return c.json({});
 });
 serve({ fetch: app.fetch, createServer, port: getServerPort() });

@@ -19,7 +19,10 @@ import {
   decodeDance,
   encodeDance,
   emptyDance,
+  liveStreak,
+  nextStreak,
   parseDance,
+  parseStreak,
   isPart,
   type Dance,
 } from "../shared/studio";
@@ -56,6 +59,20 @@ let lastBeat = -1;
 let storedSignature = "";
 const challenge = challengeFor();
 const draftKey = "dance-lab:draft:v1";
+const streakKey = "dance-lab:streak:v1";
+let streak = 0;
+let completedToday = false;
+let dancersToday: number | null = null;
+let captionTimer: ReturnType<typeof setTimeout> | undefined;
+let captionFlash = "";
+function flashCaption(text: string) {
+  captionFlash = text;
+  clearTimeout(captionTimer);
+  captionTimer = setTimeout(() => {
+    captionFlash = "";
+    sync();
+  }, 1800);
+}
 function notice(text: string) {
   const n = el("notice");
   n.textContent = text;
@@ -78,6 +95,17 @@ function changed() {
 }
 function addMove(part: Part, value: number) {
   if (playing) return;
+  if (selectedIndex >= 0 && selectedIndex < dance.steps.length) {
+    // Editing an existing step: replace it in place, keep the rest.
+    const index = selectedIndex;
+    dance.steps[index] = { part, angle: clampToLimit(part, value) };
+    pose = poseAfter(dance.steps, index + 1);
+    storedSignature = "";
+    redo = [];
+    flashCaption(`Move ${index + 1} updated ✓`);
+    sync();
+    return;
+  }
   if (dance.steps.length >= MAX_STEPS) {
     notice("Eight moves is a full recipe. Undo a move to make room.");
     pose = poseAfter(dance.steps);
@@ -86,9 +114,11 @@ function addMove(part: Part, value: number) {
   }
   dance.steps.push({ part, angle: clampToLimit(part, value) });
   pose = poseAfter(dance.steps);
+  flashCaption(`Move ${dance.steps.length} added ✓`);
   changed();
 }
 function setDance(next: Dance) {
+  captionFlash = "";
   stop();
   dance = next;
   pose = poseAfter(dance.steps);
@@ -105,20 +135,26 @@ function sync() {
     const on = b.dataset.character === dance.character;
     b.classList.toggle("active", on);
     b.setAttribute("aria-pressed", String(on));
-    const check = b.querySelector<HTMLElement>(".check");
-    if (check) check.style.visibility = on ? "visible" : "hidden";
     b.disabled = playing;
   });
   el("step-count").textContent = `${dance.steps.length} / ${MAX_STEPS} moves`;
   el<HTMLButtonElement>("play").disabled = dance.steps.length === 0;
   el("play").innerHTML = playing
-    ? "<span>■</span> Stop the dance"
-    : "<span>▶</span> Play my dance";
+    ? '<span aria-hidden="true">■</span> Stop'
+    : '<span aria-hidden="true">▶</span> Play';
+  el("play").setAttribute(
+    "aria-label",
+    playing ? "Stop the dance" : "Play my dance",
+  );
   el<HTMLButtonElement>("undo").disabled = playing || !dance.steps.length;
   el<HTMLButtonElement>("redo").disabled = playing || !redo.length;
   el<HTMLButtonElement>("clear").disabled = playing || !dance.steps.length;
+  const editing = selectedIndex >= 0 && selectedIndex < dance.steps.length;
   el<HTMLButtonElement>("add-move").disabled =
-    playing || dance.steps.length >= MAX_STEPS;
+    playing || (!editing && dance.steps.length >= MAX_STEPS);
+  el("add-move").textContent = editing
+    ? `✓ Update move ${selectedIndex + 1}`
+    : "＋ Record this move";
   el<HTMLButtonElement>("demo").disabled = playing;
   el<HTMLButtonElement>("share").disabled =
     busy || playing || !dance.steps.length;
@@ -126,6 +162,7 @@ function sync() {
     busy || playing || !dance.steps.length;
   el<HTMLButtonElement>("load").disabled = busy || playing;
   el<HTMLButtonElement>("import").disabled = playing;
+  el<HTMLButtonElement>("more").disabled = playing;
   partSelect.disabled = playing;
   angle.disabled = playing;
   tempo.disabled = playing;
@@ -135,47 +172,60 @@ function sync() {
   tempo.value = String(dance.bpm);
   el("tempo-value").textContent = `${dance.bpm} BPM`;
   el("duration").textContent = dance.steps.length
-    ? `${((danceDuration(dance.steps) * 110) / dance.bpm / 1000).toFixed(1)} seconds of pure you.`
-    : "Your next great dance starts with one move.";
-  el("stage-state").textContent = playing
-    ? "A LITTLE MAGIC IN MOTION"
-    : "READY TO GROOVE";
+    ? `· ${((danceDuration(dance.steps) * 110) / dance.bpm / 1000).toFixed(1)} s`
+    : "";
+  el("stage-state").textContent = playing ? "DANCING" : "READY";
   document.querySelector(".stage-panel")?.classList.toggle("playing", playing);
   el("stage-caption").textContent = playing
-    ? "Your recipe, one little move at a time."
-    : dance.steps.length
-      ? "Keep going. Every happy accident counts."
-      : "↖ Drag any body part. That’s your first move.";
+    ? ""
+    : captionFlash ||
+      (editing
+        ? `Editing move ${selectedIndex + 1}: drag to change it, tap it again to stop.`
+        : dance.steps.length
+          ? dance.steps.length >= MAX_STEPS
+            ? "8 moves: press Play, or tap a move to edit it."
+            : "Drag another body part to add the next move."
+          : "Drag any body part. Each drag adds a numbered move.");
   const line = el("timeline");
   line.replaceChildren();
   for (let i = 0; i < MAX_STEPS; i++) {
     const step = dance.steps[i];
     const b = document.createElement("button");
-    b.className = `move${step ? "" : " empty"}${i === selectedIndex ? " selected" : ""}`;
+    b.className = `move${step ? "" : " empty"}${i === selectedIndex ? " selected" : ""}${i === active ? " active" : ""}`;
     b.disabled = playing || !step;
     b.dataset.index = String(i);
     if (step) {
       b.setAttribute(
         "aria-label",
-        `Step ${i + 1}: ${partLabel(step.part)}, ${Math.round((step.angle * 180) / Math.PI)} degrees`,
+        `Step ${i + 1}: ${partLabel(step.part)}, ${Math.round((step.angle * 180) / Math.PI)} degrees. Tap to edit.`,
       );
-      b.innerHTML = `<span class="move-num">${i + 1}</span><span><strong>${partLabel(step.part)}</strong><small>${Math.round((step.angle * 180) / Math.PI)}° bend</small></span>`;
+      b.setAttribute("aria-pressed", String(i === selectedIndex));
+      b.innerHTML = `<span class="move-num">${i + 1}</span><span><strong>${partLabel(step.part)}</strong><small>${Math.round((step.angle * 180) / Math.PI)}°</small></span>`;
       b.addEventListener("click", () => {
-        selectedIndex = i;
-        selected = step.part;
-        pose = poseAfter(dance.steps, i + 1);
+        if (selectedIndex === i) {
+          selectedIndex = -1;
+          pose = poseAfter(dance.steps);
+        } else {
+          selectedIndex = i;
+          selected = step.part;
+          pose = poseAfter(dance.steps, i + 1);
+        }
         sync();
       });
     } else {
-      b.textContent = "＋";
+      b.textContent = String(i + 1);
       b.setAttribute("aria-label", `Empty step ${i + 1}`);
     }
     line.append(b);
   }
+  line.querySelector(".move.active, .move.selected")?.scrollIntoView({
+    block: "nearest",
+    inline: "nearest",
+  });
   const p = challengeProgress(dance, challenge);
   const checks = [
-    ["length", "Exactly 6 moves"],
-    ["part", `Use your ${partLabel(challenge.required).toLowerCase()}`],
+    ["length", `Exactly ${challenge.steps} moves`],
+    ["part", `Use the ${partLabel(challenge.required).toLowerCase()}`],
     ["variety", "Move 3 different body parts"],
   ] as const;
   el("daily-checks").replaceChildren(
@@ -186,8 +236,27 @@ function sync() {
       return li;
     }),
   );
+  const ticked = checks.filter(([key]) => p[key]).length;
   el("daily-title").textContent = challenge.title;
-  el("daily-date").textContent = `${challenge.date} · resets at midnight UTC`;
+  el("daily-chip-title").textContent = challenge.title;
+  el("daily-chip-progress").textContent = completedToday
+    ? `✓${streak > 1 ? ` · 🔥${streak}` : ""}`
+    : `${ticked}/3`;
+  el("daily-open").classList.toggle("done", completedToday);
+  el("daily-date").textContent =
+    `${challenge.date} · new recipe at midnight UTC`;
+  const parts = [
+    completedToday
+      ? "Done for today ✓"
+      : "Save or share a dance that ticks all three.",
+  ];
+  if (streak > 0)
+    parts.push(`Streak: ${streak} day${streak === 1 ? "" : "s"} 🔥`);
+  if (dancersToday !== null)
+    parts.push(
+      `${dancersToday} dancer${dancersToday === 1 ? "" : "s"} finished today.`,
+    );
+  el("daily-streak").textContent = parts.join(" · ");
 }
 for (const key of CHARACTERS) {
   const look = LOOKS[key],
@@ -195,6 +264,7 @@ for (const key of CHARACTERS) {
   b.className = "character";
   b.dataset.character = key;
   b.setAttribute("aria-label", `Choose ${look.name}, ${look.vibe}`);
+  b.title = `${look.name}, ${look.vibe}`;
   const thumb = document.createElement("canvas");
   thumb.width = 100;
   thumb.height = 120;
@@ -205,10 +275,6 @@ for (const key of CHARACTERS) {
   const label = document.createElement("span");
   label.innerHTML = `<strong>${look.name}</strong><small>${look.vibe}</small>`;
   b.append(label);
-  const check = document.createElement("span");
-  check.className = "check";
-  check.textContent = "✓";
-  b.append(check);
   b.addEventListener("click", () => {
     dance.character = key;
     changed();
@@ -224,8 +290,10 @@ for (const part of PARTS) {
 partSelect.addEventListener("change", () => {
   if (isPart(partSelect.value)) {
     selected = partSelect.value;
-    pose = poseAfter(dance.steps);
-    selectedIndex = -1;
+    pose =
+      selectedIndex >= 0
+        ? poseAfter(dance.steps, selectedIndex + 1)
+        : poseAfter(dance.steps);
     sync();
   }
 });
@@ -244,8 +312,9 @@ tempo.addEventListener("input", () => {
   dance.bpm = Number(tempo.value);
   storedSignature = "";
   el("tempo-value").textContent = `${dance.bpm} BPM`;
-  el("duration").textContent =
-    `${((danceDuration(dance.steps) * 110) / dance.bpm / 1000).toFixed(1)} seconds of pure you.`;
+  el("duration").textContent = dance.steps.length
+    ? `· ${((danceDuration(dance.steps) * 110) / dance.bpm / 1000).toFixed(1)} s`
+    : "";
 });
 function point(e: PointerEvent) {
   const r = canvas.getBoundingClientRect();
@@ -253,15 +322,17 @@ function point(e: PointerEvent) {
 }
 canvas.addEventListener("pointerdown", (e) => {
   if (playing || busy) return;
-  if (dance.steps.length >= MAX_STEPS) {
-    notice("Your recipe has 8 moves. Undo one to keep sculpting.");
+  const editing = selectedIndex >= 0 && selectedIndex < dance.steps.length;
+  if (!editing && dance.steps.length >= MAX_STEPS) {
+    notice("8 moves is a full dance. Tap a move below to edit it, or Undo.");
     return;
   }
-  pose = poseAfter(dance.steps);
+  pose = editing
+    ? poseAfter(dance.steps, selectedIndex + 1)
+    : poseAfter(dance.steps);
   const part = hitPart(pose, point(e));
   if (!part) return;
   selected = part;
-  selectedIndex = -1;
   drag = part;
   dragFrom = pose[part];
   canvas.setPointerCapture(e.pointerId);
@@ -281,7 +352,10 @@ canvas.addEventListener("pointerup", (e) => {
     canvas.releasePointerCapture(e.pointerId);
   if (Math.abs(pose[part] - dragFrom) > 0.06) addMove(part, pose[part]);
   else {
-    pose = poseAfter(dance.steps);
+    pose =
+      selectedIndex >= 0
+        ? poseAfter(dance.steps, selectedIndex + 1)
+        : poseAfter(dance.steps);
     sync();
   }
 });
@@ -343,6 +417,7 @@ function start() {
     stop();
     return;
   }
+  selectedIndex = -1;
   playing = true;
   playTime = 0;
   lastBeat = -1;
@@ -462,9 +537,21 @@ for (const button of document.querySelectorAll<HTMLButtonElement>(
 el("help").addEventListener("click", () =>
   el<HTMLDialogElement>("help-dialog").showModal(),
 );
-el("import").addEventListener("click", () =>
-  el<HTMLDialogElement>("import-dialog").showModal(),
+el("daily-open").addEventListener("click", () =>
+  el<HTMLDialogElement>("daily-dialog").showModal(),
 );
+el("more").addEventListener("click", () =>
+  el<HTMLDialogElement>("more-dialog").showModal(),
+);
+el("tune-toggle").addEventListener("click", () => {
+  const open = !el("tune").classList.contains("open");
+  el("tune").classList.toggle("open", open);
+  el("tune-toggle").setAttribute("aria-expanded", String(open));
+});
+el("import").addEventListener("click", () => {
+  el<HTMLDialogElement>("more-dialog").close();
+  el<HTMLDialogElement>("import-dialog").showModal();
+});
 el("import-confirm").addEventListener("click", () => {
   const next = decodeDance(el<HTMLTextAreaElement>("import-code").value);
   if (!next) {
@@ -495,6 +582,34 @@ async function request(
   }
   return response.json();
 }
+/** Applies the daily-progress part of a server reply, if present. */
+function applyProgress(value: unknown) {
+  if (!value || typeof value !== "object") return;
+  if ("streak" in value && typeof value.streak === "number")
+    streak = value.streak;
+  if ("completedToday" in value && typeof value.completedToday === "boolean")
+    completedToday = value.completedToday;
+  if ("dancersToday" in value && typeof value.dancersToday === "number")
+    dancersToday = value.dancersToday;
+}
+/** Local preview: streaks live on this device. */
+function recordLocalCompletion() {
+  if (!challengeComplete(dance, challenge)) return;
+  let stored = null;
+  try {
+    stored = parseStreak(localStorage.getItem(streakKey));
+  } catch {
+    /* Storage blocked: the streak just will not persist. */
+  }
+  const next = nextStreak(stored, challenge.date);
+  try {
+    localStorage.setItem(streakKey, JSON.stringify(next));
+  } catch {
+    /* See above. */
+  }
+  streak = next.count;
+  completedToday = true;
+}
 function draftFrom(value: unknown): Dance | null {
   return value && typeof value === "object" && "dance" in value
     ? parseDance(value.dance)
@@ -505,12 +620,18 @@ el("save").addEventListener("click", async () => {
   busy = true;
   sync();
   try {
-    if (__REDDIT__) await request("/api/draft", "POST", { dance });
-    else localStorage.setItem(draftKey, encodeDance(dance));
+    const wasComplete = completedToday;
+    if (__REDDIT__)
+      applyProgress(await request("/api/draft", "POST", { dance }));
+    else {
+      localStorage.setItem(draftKey, encodeDance(dance));
+      recordLocalCompletion();
+    }
     storedSignature = encodeDance(dance);
+    el<HTMLDialogElement>("more-dialog").close();
     notice(
-      challengeComplete(dance, challenge)
-        ? "Saved! Today’s creative challenge is complete. ✦"
+      completedToday && !wasComplete
+        ? `Saved! Today’s challenge is done. Streak: ${streak} 🔥`
         : "Saved. Your moves are in good hands.",
     );
   } catch (e) {
@@ -530,6 +651,7 @@ el("load").addEventListener("click", async () => {
     if (next) {
       setDance(next);
       storedSignature = encodeDance(next);
+      el<HTMLDialogElement>("more-dialog").close();
       notice("Your saved dance is back on stage.");
     } else notice("No saved dance yet. Make a move and save it first.");
   } catch (e) {
@@ -542,6 +664,8 @@ el("load").addEventListener("click", async () => {
 el("share").addEventListener("click", async () => {
   if (!dance.steps.length || busy) return;
   if (!__REDDIT__) {
+    recordLocalCompletion();
+    sync();
     el<HTMLTextAreaElement>("dance-code").value = encodeDance(dance);
     el<HTMLDialogElement>("share-dialog").showModal();
     return;
@@ -589,8 +713,28 @@ window.addEventListener("beforeunload", (e) => {
     e.returnValue = "";
   }
 });
+try {
+  streak = liveStreak(
+    parseStreak(localStorage.getItem(streakKey)),
+    challenge.date,
+  );
+  completedToday =
+    parseStreak(localStorage.getItem(streakKey))?.last === challenge.date;
+} catch {
+  /* Storage blocked. */
+}
 sync();
 if (__REDDIT__) {
+  streak = 0;
+  completedToday = false;
+  void request("/api/progress")
+    .then((result) => {
+      applyProgress(result);
+      sync();
+    })
+    .catch(() => {
+      /* Signed out or offline: the challenge still works without a streak. */
+    });
   el("runtime-label").textContent = "MADE TO MOVE, TOGETHER ON REDDIT";
   void request("/api/state")
     .then((result) => {

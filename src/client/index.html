@@ -9,92 +9,64 @@
   <body>
     <div class="app">
       <header class="topbar">
-        <a class="brand" href="#" aria-label="Dance Lab home"
-          ><span class="brand-icon">✳</span> dance<span>lab</span
-          ><small>BY LOUFFI</small></a
+        <h1 class="brand">
+          <span class="brand-icon" aria-hidden="true">✳</span>
+          <span class="brand-name">dance<span>lab</span></span>
+          <small>BY LOUFFI</small>
+          <span class="sr-only"> · Share Your Dance</span>
+        </h1>
+        <button
+          class="daily-chip"
+          id="daily-open"
+          aria-haspopup="dialog"
+          aria-label="Today’s challenge"
         >
-        <div class="session">
-          <span class="live-dot"></span
-          ><span id="runtime-label">YOUR LITTLE CREATIVE ESCAPE</span>
-        </div>
+          <span class="daily-chip-mark" aria-hidden="true">✦</span>
+          <span class="daily-chip-title" id="daily-chip-title"></span>
+          <b id="daily-chip-progress"></b>
+        </button>
         <button class="icon-button" id="help" aria-label="How to play">
           ?
         </button>
       </header>
-      <main>
-        <section class="intro">
-          <div>
-            <span class="eyebrow">A LITTLE CLAY. A LOT OF PERSONALITY.</span>
-            <h1>Small moves.<br /><em>Big main-character energy.</em></h1>
-            <p>
-              Grab a limb. Make a move. Turn a little chaos into your own dance.
-            </p>
+
+      <main class="studio" aria-label="Dance editor">
+        <section class="stage-panel" aria-label="Dancer stage">
+          <div class="stage-top">
+            <div
+              id="characters"
+              class="characters"
+              role="group"
+              aria-label="Pick your dancer"
+            ></div>
+            <button id="demo" class="text-button">Try a groove ↗</button>
           </div>
-          <div class="intro-sticker" aria-hidden="true">
-            <span>made to<br /><b>move!</b></span
-            ><i>✦</i>
+          <div class="canvas-wrap">
+            <canvas
+              id="stage"
+              aria-label="Drag the dancer's body parts to record moves. Alternatively open Tune, select a body part and adjust its angle."
+              tabindex="0"
+            ></canvas>
+            <div class="stage-who">
+              <b id="dancer-name">Mochi</b>
+              <small id="dancer-vibe">the daydreamer</small>
+            </div>
+            <span class="stage-pill"
+              ><span class="live-dot"></span
+              ><span id="stage-state">READY TO GROOVE</span></span
+            >
+            <div class="stage-caption" id="stage-caption"></div>
           </div>
         </section>
-        <section class="workspace" aria-label="Dance editor">
-          <aside class="panel character-panel">
-            <div class="panel-heading">
-              <span class="step-label">01</span>
-              <h2>Pick your dancer</h2>
-            </div>
-            <p class="panel-caption">Same squish. Different vibe.</p>
-            <div id="characters" class="characters"></div>
-            <div class="daily-card">
-              <span class="eyebrow">✦ TODAY’S CREATIVE CHALLENGE</span>
-              <h3 id="daily-title"></h3>
-              <p>Make a 6-move dance with:</p>
-              <ul id="daily-checks"></ul>
-              <span class="daily-date" id="daily-date"></span>
-            </div>
-          </aside>
-          <section class="stage-panel" aria-label="Dancer stage">
-            <div class="stage-top">
-              <span class="stage-pill"
-                ><span class="live-dot"></span
-                ><span id="stage-state">READY TO GROOVE</span></span
-              ><button id="demo" class="text-button">Try a groove ↗</button>
-            </div>
-            <div class="canvas-wrap">
-              <canvas
-                id="stage"
-                aria-label="Drag the dancer's body parts to record moves. Alternatively select a body part in Move Lab and adjust its angle."
-                tabindex="0"
-              ></canvas>
-              <div class="stage-caption" id="stage-caption">
-                <span class="hand-icon">↖</span> Drag any body part. That’s your
-                first move.
-              </div>
-            </div>
-            <div class="stage-bottom">
-              <span
-                ><b id="dancer-name">Mochi</b
-                ><small id="dancer-vibe">the daydreamer</small></span
-              >
-              <div class="stage-dots" aria-hidden="true">
-                <i></i><i></i><i></i><i></i><i></i>
-              </div>
-              <span class="studio-tag">100% GOOD VIBES</span>
-            </div>
-          </section>
-          <aside class="panel controls-panel">
-            <div class="panel-heading">
-              <span class="step-label">02</span>
-              <h2>Move lab</h2>
-            </div>
-            <p class="panel-caption">You’re the choreographer.</p>
-            <label class="field-label" for="body-part">BODY PART</label
-            ><select id="body-part"></select>
-            <div class="angle-display">
-              <span id="part-glyph" aria-hidden="true">↗</span
-              ><strong id="angle-value">0°</strong
-              ><small>BEND IT YOUR WAY</small>
-            </div>
-            <label class="field-label" for="angle">POSE ANGLE</label
-            ><input
+
+        <aside class="tune" id="tune" aria-label="Tune your move">
+          <div class="tune-group">
+            <label class="field-label" for="body-part">Body part</label>
+            <select id="body-part"></select>
+            <label class="field-label" for="angle"
+              >Pose angle <b id="angle-value">0°</b></label
+            >
+            <input
               id="angle"
               type="range"
               min="-175"
@@ -102,78 +74,96 @@
               value="0"
               aria-label="Pose angle"
             />
-            <div class="range-labels">
-              <span>← bend</span><span>bend →</span>
-            </div>
             <button id="add-move" class="secondary-button">
               ＋ Record this move
             </button>
-            <div class="divider"></div>
+          </div>
+          <div class="tune-group">
             <label class="field-label" for="tempo"
-              >FIND YOUR TEMPO <b id="tempo-value">110 BPM</b></label
-            ><input id="tempo" type="range" min="60" max="160" value="110" />
-            <div class="range-labels"><span>chill</span><span>party</span></div>
+              >Tempo <b id="tempo-value">110 BPM</b></label
+            >
+            <input id="tempo" type="range" min="60" max="160" value="110" />
             <label class="toggle"
               ><input id="loop" type="checkbox" checked /><span
-                >Loop the good stuff</span
+                >Loop the dance</span
               ><i></i></label
             ><label class="toggle"
-              ><input id="sound" type="checkbox" /><span
-                >Little beat machine</span
+              ><input id="sound" type="checkbox" /><span>Beat machine</span
               ><i></i
             ></label>
-            <div class="control-note">
-              ✧ No photos. No uploads.<br />Just you and your imagination.
-            </div>
-          </aside>
-        </section>
-        <section class="timeline-panel">
-          <div class="timeline-heading">
-            <div class="panel-heading">
-              <span class="step-label">03</span>
-              <h2>
-                Your dance recipe <small id="step-count">0 / 8 moves</small>
-              </h2>
-            </div>
-            <div class="edit-actions">
-              <button id="undo" class="text-button" disabled>↶ Undo</button
-              ><button id="redo" class="text-button" disabled>↷ Redo</button
-              ><button id="clear" class="text-button" disabled>Clear</button>
-            </div>
           </div>
-          <div id="timeline" class="timeline" aria-label="Dance sequence"></div>
-          <div class="playback">
-            <div class="playback-left">
-              <button id="play" class="play-button" disabled>
-                <span>▶</span> Play my dance</button
-              ><span id="duration"
-                >Your next great dance starts with one move.</span
-              >
-            </div>
-            <div class="save-actions">
-              <button id="save" class="secondary-button">♡ Save dance</button
-              ><button
-                id="load"
-                class="icon-button"
-                aria-label="Load saved dance"
-                title="Load saved dance"
-              >
-                ↥</button
-              ><button id="share" class="share-button" disabled>
-                Share your dance ↗
-              </button>
-            </div>
-          </div>
-        </section>
-        <footer>
-          <span>Handmade moves. Happy accidents. <b>That’s your style.</b></span
-          ><button id="import" class="text-button">
-            Have a dance code? Import it ↗
-          </button>
-        </footer>
+        </aside>
       </main>
+
+      <footer class="dock">
+        <div class="dock-row dock-edit">
+          <div id="timeline" class="timeline" aria-label="Dance sequence"></div>
+        </div>
+        <div class="dock-row dock-meta">
+          <div class="edit-actions">
+            <button id="undo" class="text-button" disabled>↶ Undo</button
+            ><button id="redo" class="text-button" disabled>↷ Redo</button
+            ><button id="clear" class="text-button" disabled>Clear</button>
+          </div>
+          <span class="dock-status"
+            ><b id="step-count">0 / 8 moves</b><span id="duration"></span
+          ></span>
+        </div>
+        <div class="dock-row dock-main">
+          <button id="play" class="play-button" disabled>
+            <span aria-hidden="true">▶</span> Play
+          </button>
+          <button id="share" class="share-button" disabled>Share ↗</button>
+          <button
+            id="tune-toggle"
+            class="secondary-button"
+            aria-expanded="false"
+            aria-controls="tune"
+          >
+            Tune
+          </button>
+          <button
+            id="more"
+            class="secondary-button"
+            aria-haspopup="dialog"
+            aria-label="Save, load and import"
+          >
+            ⋯
+          </button>
+        </div>
+      </footer>
     </div>
     <div id="notice" role="status" aria-live="polite"></div>
+    <dialog id="daily-dialog">
+      <button class="dialog-close" data-close aria-label="Close">×</button>
+      <div class="daily-card">
+        <span class="eyebrow">✦ TODAY’S CREATIVE CHALLENGE</span>
+        <h2 id="daily-title"></h2>
+        <p>Make a dance with:</p>
+        <ul id="daily-checks"></ul>
+        <p class="daily-streak" id="daily-streak"></p>
+        <span class="daily-date" id="daily-date"></span>
+      </div>
+      <p class="dialog-note">
+        Save or share a dance that ticks all three to complete today and keep
+        your streak going.
+      </p>
+    </dialog>
+    <dialog id="more-dialog">
+      <button class="dialog-close" data-close aria-label="Close">×</button
+      ><span class="eyebrow" id="runtime-label"></span>
+      <h2>Keep your dance.</h2>
+      <div class="more-actions">
+        <button id="save" class="secondary-button">♡ Save dance</button>
+        <button id="load" class="secondary-button">↥ Load saved dance</button>
+        <button id="import" class="secondary-button">
+          Import a dance code ↗
+        </button>
+      </div>
+      <p class="dialog-note">
+        Built-in clay characters only. No photos, no uploads.
+      </p>
+    </dialog>
     <dialog id="help-dialog">
       <button class="dialog-close" data-close aria-label="Close">×</button
       ><span class="eyebrow">WELCOME TO YOUR DANCE LAB</span>
@@ -184,8 +174,8 @@
           moment.
         </li>
         <li>
-          <b>Drag a body part.</b> Each move becomes a numbered step. Or use the
-          Move Lab controls.
+          <b>Drag a body part.</b> Each move becomes a numbered step. Or open
+          Tune for exact angles.
         </li>
         <li>
           <b>Press play.</b> Watch your moves come together. Change the tempo,

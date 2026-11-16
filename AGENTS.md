@@ -1,6 +1,6 @@
-# Dance Lab / reddit-game
+# Dance Lab / share-your-dance
 
-This is a fresh implementation inspired by salahlouffidi/share-your-dance.
+This is a fresh implementation of salahlouffidi/share-your-dance.
 Read README.md and package.json before changing the project.
 
 ## Decisions
@@ -9,7 +9,8 @@ Read README.md and package.json before changing the project.
 - The dance mechanic is drag a body part -> append a numbered move -> play in order.
 - Preserve the lightweight, tactile lilac/peach studio aesthetic and responsive touch support.
 - Do not reintroduce Phaser solely to match the old implementation. This renderer uses Canvas 2D to keep the client small and the local preview independent.
-- GitHub name reddit-game; Devvit name share-your-dance is provisional from onboarding and requires CLI ownership verification.
+- GitHub repo and Devvit app are both named share-your-dance.
+- The studio must fit one screen without page scrolling (tests/smoke.mjs checks five viewport sizes).
 
 ## Runtime
 

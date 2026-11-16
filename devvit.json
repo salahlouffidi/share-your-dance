@@ -4,12 +4,23 @@
   "post": {
     "dir": "dist/client",
     "entrypoints": {
-      "default": { "inline": true, "entry": "splash.html" },
-      "game": { "entry": "index.html" }
+      "default": {
+        "inline": true,
+        "entry": "splash.html"
+      },
+      "game": {
+        "entry": "index.html"
+      }
     }
   },
-  "server": { "dir": "dist/server", "entry": "index.cjs" },
-  "permissions": { "reddit": true, "redis": true },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "permissions": {
+    "reddit": true,
+    "redis": true
+  },
   "menu": {
     "items": [
       {
@@ -24,5 +35,13 @@
   "scripts": {
     "build": "vite build --config vite.config.ts",
     "dev": "vite build --config vite.config.ts --watch"
+  },
+  "scheduler": {
+    "tasks": {
+      "daily-post": {
+        "endpoint": "/internal/scheduler/daily-post",
+        "cron": "7 0 * * *"
+      }
+    }
   }
 }
