@@ -7,6 +7,8 @@ export default defineConfig({
       client: {
         build: {
           chunkSizeWarningLimit: 2000,
+          // The Phaser source map is 11 MB; leaving it out keeps uploads small.
+          sourcemap: false,
         },
       },
     }),
