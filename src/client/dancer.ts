@@ -1,5 +1,11 @@
 import type * as Phaser from 'phaser';
-import { solveBones, type Bone, type Part, type Point, type Pose } from '../shared/dance';
+import {
+  solveBones,
+  type Bone,
+  type Part,
+  type Point,
+  type Pose,
+} from '../shared/dance';
 
 // Clay palette. The dancer is drawn with code only (no image assets), so the
 // look stays consistent at any size and the post loads fast.
@@ -51,7 +57,13 @@ const distanceToSegment = (p: Point, a: Point, b: Point): number => {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const lengthSq = dx * dx + dy * dy;
-  const t = lengthSq === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq));
+  const t =
+    lengthSq === 0
+      ? 0
+      : Math.max(
+          0,
+          Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSq)
+        );
   return Math.hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t));
 };
 
@@ -65,7 +77,8 @@ export const partAt = (pose: Pose, point: Point): Part | null => {
     let distance =
       bone.part === 'head'
         ? Math.hypot(point.x - bone.end.x, point.y - bone.end.y) - HEAD_RADIUS
-        : distanceToSegment(point, bone.start, bone.end) - LIMB_WIDTH[bone.part] / 2;
+        : distanceToSegment(point, bone.start, bone.end) -
+          LIMB_WIDTH[bone.part] / 2;
     // Limbs win over the torso where they overlap it.
     if (bone.part === 'torso') distance += 0.06;
     if (distance < bestDistance) {
@@ -87,7 +100,10 @@ export const badgeAnchor = (pose: Pose, part: Part): Point => {
       y: bone.end.y + Math.sin(bone.dir) * HEAD_RADIUS,
     };
   }
-  return { x: (bone.start.x + bone.end.x) / 2, y: (bone.start.y + bone.end.y) / 2 };
+  return {
+    x: (bone.start.x + bone.end.x) / 2,
+    y: (bone.start.y + bone.end.y) / 2,
+  };
 };
 
 type Draw = {
@@ -95,7 +111,14 @@ type Draw = {
   view: DancerView;
 };
 
-const capsule = (d: Draw, a: Point, b: Point, width: number, color: number, alpha = 1) => {
+const capsule = (
+  d: Draw,
+  a: Point,
+  b: Point,
+  width: number,
+  color: number,
+  alpha = 1
+) => {
   const { g, view } = d;
   const p = toScreen(view, a);
   const q = toScreen(view, b);
@@ -113,7 +136,10 @@ const disc = (d: Draw, c: Point, radius: number, color: number, alpha = 1) => {
   d.g.fillCircle(p.x, p.y, radius * d.view.scale);
 };
 
-const shift = (p: Point, dx: number, dy: number): Point => ({ x: p.x + dx, y: p.y + dy });
+const shift = (p: Point, dx: number, dy: number): Point => ({
+  x: p.x + dx,
+  y: p.y + dy,
+});
 
 const along = (bone: Bone, t: number): Point => ({
   x: bone.start.x + (bone.end.x - bone.start.x) * t,
@@ -124,7 +150,13 @@ const along = (bone: Bone, t: number): Point => ({
 const clayLimb = (d: Draw, bone: Bone, selected: boolean) => {
   const width = LIMB_WIDTH[bone.part];
   if (selected) capsule(d, bone.start, bone.end, width + 0.07, INK);
-  capsule(d, shift(bone.start, 0.02, 0.03), shift(bone.end, 0.02, 0.03), width, CLAY_SHADE);
+  capsule(
+    d,
+    shift(bone.start, 0.02, 0.03),
+    shift(bone.end, 0.02, 0.03),
+    width,
+    CLAY_SHADE
+  );
   capsule(d, bone.start, bone.end, width, CLAY);
   capsule(
     d,
@@ -143,7 +175,10 @@ const star = (d: Draw, center: Point, radius: number, rotation: number) => {
   for (let i = 0; i < 10; i++) {
     const r = i % 2 === 0 ? radius : radius * 0.45;
     const angle = rotation + (i * Math.PI) / 5;
-    const p = toScreen(view, { x: center.x + Math.cos(angle) * r, y: center.y + Math.sin(angle) * r });
+    const p = toScreen(view, {
+      x: center.x + Math.cos(angle) * r,
+      y: center.y + Math.sin(angle) * r,
+    });
     if (i === 0) g.moveTo(p.x, p.y);
     else g.lineTo(p.x, p.y);
   }
@@ -197,12 +232,20 @@ export const drawDancer = (
   const floor = toScreen(view, { x: 0, y: floorY });
   const spread = 1 + options.bounce * 0.12;
   g.fillStyle(FLOOR, 1);
-  g.fillEllipse(floor.x, floor.y, 1.5 * view.scale * spread, 0.26 * view.scale * spread);
+  g.fillEllipse(
+    floor.x,
+    floor.y,
+    1.5 * view.scale * spread,
+    0.26 * view.scale * spread
+  );
 
   // The whole body dips a little on each step.
   const dipped: DancerView = {
     scale: view.scale,
-    origin: { x: view.origin.x, y: view.origin.y + options.bounce * 0.05 * view.scale },
+    origin: {
+      x: view.origin.x,
+      y: view.origin.y + options.bounce * 0.05 * view.scale,
+    },
   };
   const d: Draw = { g, view: dipped };
   const bones = solveBones(pose);
@@ -224,8 +267,15 @@ export const drawDancer = (
   // T-shirt: the torso plus a shoulder bar. Its print is where the player's
   // image will go in week 2; for now it carries a star.
   const torso = bones.torso;
-  if (is('torso')) capsule(d, along(torso, 0.12), torso.end, LIMB_WIDTH.torso + 0.07, INK);
-  capsule(d, shift(along(torso, 0.12), 0.02, 0.03), shift(torso.end, 0.02, 0.03), LIMB_WIDTH.torso, SHIRT_SHADE);
+  if (is('torso'))
+    capsule(d, along(torso, 0.12), torso.end, LIMB_WIDTH.torso + 0.07, INK);
+  capsule(
+    d,
+    shift(along(torso, 0.12), 0.02, 0.03),
+    shift(torso.end, 0.02, 0.03),
+    LIMB_WIDTH.torso,
+    SHIRT_SHADE
+  );
   capsule(d, along(torso, 0.12), torso.end, LIMB_WIDTH.torso, SHIRT);
   capsule(d, bones.armL.start, bones.armR.start, 0.24, SHIRT);
   const chest = along(torso, 0.6);
