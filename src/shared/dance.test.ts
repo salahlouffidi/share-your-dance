@@ -108,7 +108,10 @@ test('frameAt on an empty dance is done at rest', () => {
 });
 
 test('parseSteps accepts clean data and clamps angles', () => {
-  const parsed = parseSteps([{ part: 'torso', angle: 5 }, { part: 'head', angle: 0.1 }]);
+  const parsed = parseSteps([
+    { part: 'torso', angle: 5 },
+    { part: 'head', angle: 0.1 },
+  ]);
   assert.ok(parsed);
   assert.equal(parsed.length, 2);
   close(parsed[0]?.angle ?? NaN, clampToLimit('torso', 5));
@@ -120,6 +123,9 @@ test('parseSteps rejects bad data', () => {
   assert.equal(parseSteps([{ part: 'head', angle: 'x' }]), null);
   assert.equal(parseSteps([{ part: 'head', angle: Infinity }]), null);
   assert.equal(parseSteps([null]), null);
-  const tooMany = Array.from({ length: MAX_STEPS + 1 }, () => ({ part: 'head', angle: 0 }));
+  const tooMany = Array.from({ length: MAX_STEPS + 1 }, () => ({
+    part: 'head',
+    angle: 0,
+  }));
   assert.equal(parseSteps(tooMany), null);
 });

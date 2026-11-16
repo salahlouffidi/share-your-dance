@@ -50,16 +50,86 @@ const DEG = Math.PI / 180;
 
 // Lengths are in "body units"; the torso is 0.8 units tall.
 const BONES: Record<Part, BoneDef> = {
-  torso: { parent: null, anchor: { x: 0, y: 0 }, rest: -90 * DEG, length: 0.8, limit: 35 * DEG, label: 'Body' },
-  head: { parent: 'torso', anchor: 'end', rest: 0, length: 0.36, limit: 45 * DEG, label: 'Head' },
-  armL: { parent: 'torso', anchor: 'end', rest: 200 * DEG, length: 0.42, limit: 175 * DEG, label: 'Left arm' },
-  foreL: { parent: 'armL', anchor: 'end', rest: 0, length: 0.4, limit: 150 * DEG, label: 'Left hand' },
-  armR: { parent: 'torso', anchor: 'end', rest: 160 * DEG, length: 0.42, limit: 175 * DEG, label: 'Right arm' },
-  foreR: { parent: 'armR', anchor: 'end', rest: 0, length: 0.4, limit: 150 * DEG, label: 'Right hand' },
-  legL: { parent: null, anchor: { x: -0.16, y: 0.04 }, rest: 97 * DEG, length: 0.5, limit: 85 * DEG, label: 'Left leg' },
-  shinL: { parent: 'legL', anchor: 'end', rest: 0, length: 0.5, limit: 130 * DEG, label: 'Left foot' },
-  legR: { parent: null, anchor: { x: 0.16, y: 0.04 }, rest: 83 * DEG, length: 0.5, limit: 85 * DEG, label: 'Right leg' },
-  shinR: { parent: 'legR', anchor: 'end', rest: 0, length: 0.5, limit: 130 * DEG, label: 'Right foot' },
+  torso: {
+    parent: null,
+    anchor: { x: 0, y: 0 },
+    rest: -90 * DEG,
+    length: 0.8,
+    limit: 35 * DEG,
+    label: 'Body',
+  },
+  head: {
+    parent: 'torso',
+    anchor: 'end',
+    rest: 0,
+    length: 0.36,
+    limit: 45 * DEG,
+    label: 'Head',
+  },
+  armL: {
+    parent: 'torso',
+    anchor: 'end',
+    rest: 200 * DEG,
+    length: 0.42,
+    limit: 175 * DEG,
+    label: 'Left arm',
+  },
+  foreL: {
+    parent: 'armL',
+    anchor: 'end',
+    rest: 0,
+    length: 0.4,
+    limit: 150 * DEG,
+    label: 'Left hand',
+  },
+  armR: {
+    parent: 'torso',
+    anchor: 'end',
+    rest: 160 * DEG,
+    length: 0.42,
+    limit: 175 * DEG,
+    label: 'Right arm',
+  },
+  foreR: {
+    parent: 'armR',
+    anchor: 'end',
+    rest: 0,
+    length: 0.4,
+    limit: 150 * DEG,
+    label: 'Right hand',
+  },
+  legL: {
+    parent: null,
+    anchor: { x: -0.16, y: 0.04 },
+    rest: 97 * DEG,
+    length: 0.5,
+    limit: 85 * DEG,
+    label: 'Left leg',
+  },
+  shinL: {
+    parent: 'legL',
+    anchor: 'end',
+    rest: 0,
+    length: 0.5,
+    limit: 130 * DEG,
+    label: 'Left foot',
+  },
+  legR: {
+    parent: null,
+    anchor: { x: 0.16, y: 0.04 },
+    rest: 83 * DEG,
+    length: 0.5,
+    limit: 85 * DEG,
+    label: 'Right leg',
+  },
+  shinR: {
+    parent: 'legR',
+    anchor: 'end',
+    rest: 0,
+    length: 0.5,
+    limit: 130 * DEG,
+    label: 'Right foot',
+  },
 };
 
 /** Shoulders sit a little to each side of the top of the torso. */
@@ -164,7 +234,10 @@ export const aimPart = (pose: Pose, part: Part, target: Point): number => {
 };
 
 /** The pose reached after the first `count` steps (all of them by default). */
-export const poseAfter = (steps: readonly Step[], count = steps.length): Pose => {
+export const poseAfter = (
+  steps: readonly Step[],
+  count = steps.length
+): Pose => {
   const pose = restPose();
   for (const step of steps.slice(0, count)) {
     pose[step.part] = step.angle;

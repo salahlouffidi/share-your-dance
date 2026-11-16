@@ -67,7 +67,8 @@ export class Editor extends Scene {
     for (const part of PARTS) {
       const badge = this.add
         .text(0, 0, '', {
-          fontFamily: 'ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif',
+          fontFamily:
+            'ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif',
           fontSize: '15px',
           fontStyle: 'bold',
           color: BADGE_COLORS.text,
@@ -109,7 +110,10 @@ export class Editor extends Scene {
     if (!part) return;
 
     if (this.steps.length >= MAX_STEPS) {
-      this.game.events.emit(EditorEvent.notice, `${MAX_STEPS} steps is the max. Undo one to change it.`);
+      this.game.events.emit(
+        EditorEvent.notice,
+        `${MAX_STEPS} steps is the max. Undo one to change it.`
+      );
       return;
     }
 
@@ -247,7 +251,8 @@ export class Editor extends Scene {
 
       const label = list.join('·');
       const at = toScreen(view, badgeAnchor(this.pose, part));
-      const isActive = this.activeStep >= 0 && list.includes(this.activeStep + 1);
+      const isActive =
+        this.activeStep >= 0 && list.includes(this.activeStep + 1);
       const radius = (isActive ? 15 : 12) + (label.length - 1) * 3.5;
 
       this.graphics.fillStyle(isActive ? 0xf2b632 : BADGE_COLORS.fill, 1);

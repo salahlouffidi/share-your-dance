@@ -3,7 +3,8 @@ import { AUTO, Game } from 'phaser';
 import { MAX_STEPS, parseSteps, partLabel, type Step } from '../shared/dance';
 import { Editor, EditorCommand, EditorEvent } from './scenes/Editor';
 
-const DEFAULT_HINT = 'Touch a body part and drag it. Every move becomes a numbered step.';
+const DEFAULT_HINT =
+  'Touch a body part and drag it. Every move becomes a numbered step.';
 const READY_HINT = 'Press Play to watch the steps in order.';
 
 const element = <T extends HTMLElement>(id: string, type: new () => T): T => {
@@ -73,9 +74,14 @@ const start = () => {
   });
 
   game.events.on(EditorEvent.active, (index: unknown) => {
-    [...list.children].forEach((item, i) => item.classList.toggle('active', i === index));
+    [...list.children].forEach((item, i) =>
+      item.classList.toggle('active', i === index)
+    );
     if (typeof index === 'number' && index >= 0) {
-      list.children[index]?.scrollIntoView({ block: 'nearest', inline: 'center' });
+      list.children[index]?.scrollIntoView({
+        block: 'nearest',
+        inline: 'center',
+      });
     }
   });
 

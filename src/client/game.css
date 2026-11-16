@@ -6,7 +6,8 @@
   --clay-deep: #a94e29;
   --teal: #2e8b84;
   --sun: #f2b632;
-  --font: ui-rounded, 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
+  --font:
+    ui-rounded, 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
 }
 
 * {
